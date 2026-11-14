@@ -1,0 +1,10 @@
+.venv
+.venv-tts
+
+audio_cache
+models
+clips
+
+roi.json
+empty_spot.png
+

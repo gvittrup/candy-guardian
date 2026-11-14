@@ -1,0 +1,97 @@
+[camera]
+device = "/dev/video0"
+width = 1280
+height = 720
+fps = 30
+
+[detector]
+model = "models/yolo26n-pose_openvino_model"
+imgsz = 640            # drop to 480 if FPS is low
+conf = 0.4             # person detection confidence
+target_fps = 12        # processing rate; the camera still captures at 30
+
+[bowl]
+roi_file = "roi.json"
+margin_px = 12         # a hand must move this far outside the outline to count as out
+
+[grabs]
+keypoint_conf = 0.35   # ignore wrist/elbow points below this confidence
+hand_extend = 0.35     # push the wrist point toward the fingers (fraction of forearm)
+min_dip_s = 0.15       # shorter dips are noise
+merge_gap_s = 0.6      # leaving and re-entering within this time is one grab
+max_grabs = 2          # more grabs than this = too much
+max_dwell_s = 6.0      # total hand-in-bowl time above this = too much
+track_timeout_s = 4.0  # forget a person this long after they leave
+
+[voice]
+backend = "chatterbox"            # piper | kokoro | chatterbox
+cache_dir = "audio_cache"
+effect = ["pitch", "-120", "tempo", "-s", "0.92", "bass", "+4", "treble", "-3",
+          "pad", "0", "0.8", "reverb", "25", "50", "60", "gain", "-n", "-1"]
+
+# piper
+piper_model = "models/en_US-ryan-high.onnx"
+length_scale = 1.15
+noise_scale = 0.75
+noise_w_scale = 0.9
+
+# kokoro
+kokoro_voice = "bm_george"
+kokoro_speed = 1
+
+# chatterbox
+chatterbox_ref = "models/the-darkness.wav"  # 10-20 s of clean speech; "" for the default voice
+chatterbox_exaggeration = 0.7                  # 0.5 = neutral; higher = more dramatic
+chatterbox_cfg_weight = 0.3                    # lower = slower, more deliberate pacing
+
+[player]
+backend = "aplay"      # "aplay" or "none" (log only)
+# device = "plughw:3,1"  # ALSA card,device of the speaker
+device = "plughw:1,0"  # ALSA card,device of the speaker
+global_cooldown_s = 8.0
+pending_s = 3.0        # drop a flag if the speaker is busy this long
+
+[costume]
+enabled = true
+min_confidence = 0.35  # below this, fall back to a generic line
+attempts = 3           # crops classified per person
+min_box_height = 160   # px; skip people too small to classify
+submit_every_s = 0.7
+
+[stream]
+enabled = true
+host = "0.0.0.0"
+port = 8081
+jpeg_quality = 70
+
+[bowl_watch]
+enabled = true
+ref_file = "empty_spot.png"
+empty_diff_max = 10.0   # below this, the bowl area looks like the empty spot (calibrate, step 7)
+missing_after_s = 0.7   # how long it must look empty before the alarm
+return_after_s = 2.0    # how long it must look occupied to count as returned
+repeat_s = 3.0          # repeat the alarm while the bowl is gone
+max_alarms = 4
+
+[greeting]
+enabled = true
+delay_s = 2.0       # how long someone must be in view before the greeting
+cooldown_s = 20.0   # anyone arriving within this window counts as the same group
+max_wait_s = 4.0    # if the speaker is busy this long, skip greeting them
+
+[audio]
+enabled = true
+device = "plughw:CARD=Kiyo,DEV=0"
+
+[recording]
+enabled = true
+dir = "clips"
+pre_roll_s = 2.0        # seconds kept from before someone appears
+post_roll_s = 3.0       # stop this long after the last person leaves
+max_clip_s = 120.0      # split very long visits into several clips
+min_box_height = 160    # ignore people far away, like on the sidewalk
+annotated = false       # true = record the debug view with boxes and hand dots
+codec = "MJPG"
+ext = ".avi"
+keep_days = 30          # clips older than this are deleted at startup
+convert = true
