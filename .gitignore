@@ -1,5 +1,7 @@
 .venv
 .venv-tts
+__pycache__
+*.pyc
 
 audio_cache
 models
